@@ -42,6 +42,7 @@ jobs:
           curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz" | gunzip > raw_data/share_it.xml
           curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_ES1.xml.gz" | gunzip > raw_data/share_es.xml
           python scripts/build_db.py public/b.sqlite3
+          python scripts/validate_db.py public/b.sqlite3
 
       - uses: actions/configure-pages@v5
 
