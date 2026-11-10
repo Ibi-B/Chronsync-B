@@ -1,6 +1,9 @@
 name: Build Node B
 
 on:
+  push:
+    branches:
+      - codex/validate-epg-build-2026-11-10
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
@@ -44,10 +47,13 @@ jobs:
           python scripts/build_db.py public/b.sqlite3
           python scripts/validate_db.py public/b.sqlite3
 
-      - uses: actions/configure-pages@v5
+      - if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
-      - uses: actions/deploy-pages@v4
+      - if: github.ref == 'refs/heads/main'
+        uses: actions/deploy-pages@v4
