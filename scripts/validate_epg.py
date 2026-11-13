@@ -63,7 +63,7 @@ def validate(path: Path) -> None:
             fail(f"{path}: XML root element must be <tv>")
 
         for event, element in context:
-            if event != "end":
+            if event != "end" or element.tag not in ("channel", "programme"):
                 continue
 
             if element.tag == "channel":
