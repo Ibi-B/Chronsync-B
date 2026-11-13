@@ -29,18 +29,47 @@ jobs:
 
       - name: Build Node B
         run: |
+          set -euo pipefail
           mkdir -p raw_data public
-          curl -L --fail "https://i.mjh.nz/PlutoTV/gb.xml.gz" | gunzip > raw_data/pluto_gb.xml
-          curl -L --fail "https://i.mjh.nz/PlutoTV/de.xml.gz" | gunzip > raw_data/pluto_de.xml
-          curl -L --fail "https://i.mjh.nz/PlutoTV/it.xml.gz" | gunzip > raw_data/pluto_it.xml
-          curl -L --fail "https://i.mjh.nz/PlutoTV/es.xml.gz" | gunzip > raw_data/pluto_es.xml
-          curl -L --fail "https://i.mjh.nz/SamsungTVPlus/gb.xml.gz" | gunzip > raw_data/sam_gb.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_UK1.xml.gz" | gunzip > raw_data/share_uk.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_IE1.xml.gz" | gunzip > raw_data/share_ie.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz" | gunzip > raw_data/share_de.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_FR1.xml.gz" | gunzip > raw_data/share_fr.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz" | gunzip > raw_data/share_it.xml
-          curl -L --fail "https://epgshare01.online/epgshare01/epg_ripper_ES1.xml.gz" | gunzip > raw_data/share_es.xml
+
+          report="raw_data/source_report.tsv"
+          printf 'source\turl\tbytes\tstatus\n' > "$report"
+
+          fetch() {
+            local url="$1"
+            local output="$2"
+            local compressed="${output}.gz"
+
+            curl --fail --location --show-error --silent \
+              "$url" \
+              -o "$compressed"
+
+            test -s "$compressed"
+            gzip -t "$compressed"
+            gunzip -c "$compressed" > "$output"
+            test -s "$output"
+
+            printf '%s\t%s\t%s\tok\n' \
+              "$(basename "$output")" \
+              "$url" \
+              "$(stat -c%s "$output")" \
+              >> "$report"
+          }
+
+          fetch "https://i.mjh.nz/PlutoTV/gb.xml.gz" "raw_data/pluto_gb.xml"
+          fetch "https://i.mjh.nz/PlutoTV/de.xml.gz" "raw_data/pluto_de.xml"
+          fetch "https://i.mjh.nz/PlutoTV/it.xml.gz" "raw_data/pluto_it.xml"
+          fetch "https://i.mjh.nz/PlutoTV/es.xml.gz" "raw_data/pluto_es.xml"
+          fetch "https://i.mjh.nz/SamsungTVPlus/gb.xml.gz" "raw_data/sam_gb.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_UK1.xml.gz" "raw_data/share_uk.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_IE1.xml.gz" "raw_data/share_ie.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz" "raw_data/share_de.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_FR1.xml.gz" "raw_data/share_fr.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz" "raw_data/share_it.xml"
+          fetch "https://epgshare01.online/epgshare01/epg_ripper_ES1.xml.gz" "raw_data/share_es.xml"
+
+          test "$(find raw_data -maxdepth 1 -name '*.xml' -type f | wc -l)" -eq 11
+
           python scripts/build_db.py public/b.sqlite3
 
       - uses: actions/configure-pages@v5
