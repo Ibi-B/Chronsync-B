@@ -70,6 +70,10 @@ jobs:
 
           test "$(find raw_data -maxdepth 1 -name '*.xml' -type f | wc -l)" -eq 11
 
+          for file in raw_data/*.xml; do
+            python scripts/validate_epg.py "$file"
+          done
+
           python scripts/build_db.py public/b.sqlite3
 
       - uses: actions/configure-pages@v5
