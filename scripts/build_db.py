@@ -21,20 +21,24 @@ def fail(message: str) -> None:
 
 
 def parse_xmltv_time(value: str):
-    if not value:
-        return None
-
     parts = value.split()
-    raw = parts[0]
-
-    if len(raw) == 12:
-        local_time = datetime.strptime(raw, "%Y%m%d%H%M")
-    elif len(raw) == 14:
-        local_time = datetime.strptime(raw, "%Y%m%d%H%M%S")
-    else:
+    if not parts or len(parts) > 2:
         return None
 
-    if len(parts) > 1:
+    raw = parts[0]
+    try:
+        if len(raw) == 12:
+            local_time = datetime.strptime(raw, "%Y%m%d%H%M")
+        elif len(raw) == 14:
+            local_time = datetime.strptime(raw, "%Y%m%d%H%M%S")
+        else:
+            return None
+    except ValueError:
+        # Match validator behavior: a malformed timestamp invalidates only
+        # this programme record, rather than aborting the entire database build.
+        return None
+
+    if len(parts) == 2:
         offset = parts[1]
         if len(offset) != 5 or offset[0] not in "+-" or not offset[1:].isdigit():
             return None
